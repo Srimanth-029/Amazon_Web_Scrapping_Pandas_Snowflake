@@ -1,0 +1,46 @@
+We are using SnowSQL API for db creation and to insert the scraped data into the table.
+---------SETTING UP SNOWSQL
+snowsql -a acc-identifier-with region -u username
+
+---Queries to create db,schema,table
+CREATE OR REPLACE DATABASE Amazon_Data;
+
+CREATE OR REPLACE SCHEMA Amazon_Scrape;
+
+USE Amazon_Data;
+
+USE Amazon_Scrape;
+
+CREATE OR REPLACE TABLE AMAZON DATA(
+Id INT AUTOINCREMENT START 1 INCREMENT 1 ORDER,
+Product_Name VARCHAR(2000),
+URL VARCHAR(1000),
+Price VARCHAR(20),
+Ratings FLOAT,
+Availability VARCHAR(20),
+Is_Returnable BOOLEAN
+);
+
+---Query to keep the file into the table-stage of the table Amazon_Data
+PUT FILE:///file-path/Amazon_Data.csv @%Amazon_Data
+
+---Create a SnowPipe to Insert the Table Data from the file present in Table-Stage to Amazon_Data Table -
+
+CREATE OR REPLACE SNOWPIPE Amazon_Scrape
+AS
+COPY INTO Amazon_Data(Product_Name,URL,Price,Ratings,Availability,Is_Returnable)
+	FROM @%Amazon_Data/Amazon_Data.csv.gz
+	FILE_FORMAT = (TYPE = 'CSV', 
+		       FIELD_DELIMITER = ',',
+ 		       SKIP_HEADER = 1,
+		       EMPTY_FIELD_AS_NULL = True,
+		       FIELD_OPTIONALLY_ENCLOSED_BY = '"');
+
+---To Trigger SnowPipe 
+ALTER PIPE Amazon_Scrape REFRESH;
+
+---Queries to check the history and status of data_loading through snow_pipe
+
+SELECT SYSTEM$PIPE('Amazon_Scrape');
+SELECT * FROM TABLE(INFORMARION_SCHEMA.COPY_HISTORY(TABLE_NAME => 'Amazon_Data',START_TIME => DATE_ADD(HOURS,-2,CURRENT_TIMESTAMP()));
+
