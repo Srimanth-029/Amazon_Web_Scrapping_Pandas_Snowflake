@@ -18,7 +18,9 @@ URL VARCHAR(1000),
 Price VARCHAR(20),
 Ratings FLOAT,
 Availability VARCHAR(20),
-Is_Returnable BOOLEAN
+Is_Returnable BOOLEAN.
+Created_By Varchar(50) DEFAULT CURRENT_USER;
+Created_Date TIMESTAMP DEFAULT CURRENT_TIME
 );
 
 ---Query to keep the file into the table-stage of the table Amazon_Data
